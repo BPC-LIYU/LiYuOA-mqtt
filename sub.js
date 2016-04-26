@@ -3,7 +3,7 @@
  */
 var mqtt = require('mqtt');
 
-var client = mqtt.connect("mqtt://localhost:5112", {clientId: '123', clean: false});
+var client = mqtt.connect("mqtt://localhost:5112", {clientId: '123', username:'11', password:'22', clean: false});
 
 client.subscribe('test', {qos: 1});
 
