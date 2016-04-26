@@ -1,0 +1,11 @@
+*.pyc
+node_modules
+/.idea
+/db.sqlite3
+.DS_Store
+*.log
+*.log.*
+db.sqlite3-journal
+@test*
+/static_all
+Thumbs.db

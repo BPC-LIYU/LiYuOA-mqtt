@@ -1,0 +1,150 @@
+/**
+ * Created by wangjian on 16/4/26.
+ */
+
+//主动
+//todo:/登录/获取会话列表/获取总未读数/清除未读数/删除会话/查询历史记录/发送消息/发送已读回执/退出
+//todo:/获取免打扰（人或群）/设置好友信息（昵称、黑名单、免扰）/获取通知状态（是否通知、声音、震动）/设置通知状态（是否通知、声音、震动）/获取好友列表/获取群列表/获取群成员列表/获取群信息/
+//todo:/设置群昵称（自己、他人）
+
+//被动回调
+//todo:收到消息（人、群）/会话列表更新/已读回执（人、群）/系统消息/群系统消息（群信息更新、群成员信息更新、入群申请、加人、踢人、退群、解散、管理员变更、群主变更、更新群公告）
+// todo:/好友信息变动多端同步(好友昵称、黑名单、免扰)/被踢/
+
+//事件消息
+var event_message = {
+    message_id:'', //服务器端id，防止重复
+    event_type:'', //事件类型：session_update|message_read|group_sys_message|friend_sys_message|kick|
+    event_obj:'json' //事件内容
+};
+
+var group_sys_message = {
+    id:'', //服务器端id，
+    group_id:'', //群id
+    type: '', //消息类型：update|member|apply|add|remove|quite|dismiss|add_manager|remove_manager|transfer|gonggao
+    obj:{}, //消息的对象
+    update_time: '' //事件发生时间
+};
+
+//好友消息已读事件
+var message_read = {
+    id:'', //服务器端id，
+    session_id:'', //会话一个id
+    message_id: '', //消息id
+    target:1, //读消息的对象id
+    update_time: '' //事件发生时间
+
+};
+
+//会话更新事件
+var session_update = {
+    id:'', //服务器端id，
+    session_id:'', //每个会话一个id：好友会话[user_id]_p_[user_id] : 群会话[user_id]_g_[group_id]：系统会话[user_id]_s_[sys_id]
+    owner_id: 1, //用户id
+    target:1, //聊天对象id
+    target_type:1, //聊天对象类型
+    is_top:true, //是否置顶
+    nickname:'', //显示昵称
+    content:'', //显示最后一条内容
+    update_time: '', //最后一条时间
+    time:112,  //已读时间戳
+    unread:12 //未读消息数
+};
+
+
+
+//聊天消息
+var chat_message = {
+    message_id:"", //服务器端消息id
+    session_id:'', //隶属会话 详细见会话更新事件
+    fuser:1, //发送方id
+    fnick:'', //发送方昵称
+    fclient_id:'', //客户端clientid：[phone|web|plugin360|pluginchrome]_[user_id]:phone_12
+    fdevice_id:'', //客户端设备id:xdsfsdfsd
+    target:1, //目标id
+    target_type:1, //目标类型
+    time:1, //时间戳
+    ctype:1, //消息类型:0:文字消息；1：图片消息；2：附件消息；3：音频消息；4：视频消息；5：地理位置消息；6：名片消息；7：超链接消息；8：oa消息；9：动态表情消息；10:自定义
+    is_read:1, //是否已读
+    readuserlist:[{user_id:1, is_read:true, time:''},{user_id:2, is_read:false, time:''}], //消息的接收人列表 已读未读，已读时间点
+    content:'', //内容
+    ext:'json', //扩展字段
+    id_client:1, //客户端提供的id
+    push_content:'', //推送通知时显示的内容
+    push_payload:'json', //推送通知时显示的自定义字段
+    is_push:1, //是否推送
+    is_unreadable:1 //是否计入未读数
+};
+var event = {
+    callid:1, //客户端用来区分回调函数的id，客户端自0~1000循环
+    type:'chat|event|query',
+    compress:0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
+    obj:chat_message //消息json信息
+};
+var message = {
+    topic: 'user/{{uid}}', //group/{{group_id}}
+    payload: JSON.stringify(event), // or a Buffer
+    qos: 1, // 0, 1, or 2
+    retain: false // or true
+};
+
+//用户 、群
+var User = sequelize.define("liyuoa_lyuser", {
+    id:{
+        type:Sequelize.INTEGER,
+        field: 'id'
+    },
+    imusername:{
+        type:Sequelize.STRING,
+        field: 'imusername'
+    },
+    impassword:{
+        type:Sequelize.STRING,
+        field: 'impassword'
+    },
+    is_active:{
+        type:Sequelize.BOOLEAN,
+        field: 'is_active'
+    }
+});
+
+User.findOne({
+    where:{
+        imusername:'11',
+        impassword:'22'
+    }
+}).then(function(user){
+
+}, function(error){
+
+});
+
+
+
+var TalkGroup = sequelize.define("liyuim_talkuser", {
+    id:{
+        type:Sequelize.INTEGER,
+        field: 'id'
+    },
+    talkgroup_id:{
+        type:Sequelize.INTEGER,
+        field: 'talkgroup_id'
+    },
+    user_id:{
+        type:Sequelize.INTEGER,
+        field: 'user_id'
+    },
+    is_active:{
+        type:Sequelize.BOOLEAN,
+        field: 'is_active'
+    }
+});
+
+TalkGroup.findAll({
+    where:{
+        user_id:1,
+        is_active:true
+    }
+}).then(function(talkgroups){
+
+}, function(error){});

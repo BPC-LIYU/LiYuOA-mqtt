@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="mqttbrowser.js"></script>
+</head>
+<body>
+<script>
+    var client = mqtt.connect("mqtt://localhost:1884", {clientId: "123", clean: true});
+
+    client.subscribe('test', {qos: 1});
+    client.handleMessage=function (packet, callback) {
+        if(packet.payload.toString() == "beiti"){
+            client.end();
+        }
+        console.log(packet.payload.toString());
+        callback();
+    }
+
+</script>
+</body>
+</html>
