@@ -87,15 +87,6 @@ server.authenticate = function (client, username, password, callback) {
 
         } else {
             callback(null, true);
-            dbservice.query_group_list(user.id, function (err, groups) {
-                if (err) {
-                    callback(err, false);
-                    return;
-                }
-
-
-
-            });
 
         }
     });
@@ -113,7 +104,7 @@ server.authorizePublish = function (client, topic, payload, callback) {
 
 server.on('clientConnected', function (client) {
     subscribe_for_client(client, "user/" + client.user.id);
-    dbservice.query_group_list(user.id, function (err, groups) {
+    dbservice.query_group_list(client.user.id, function (err, groups) {
         if (err) {
             callback(err, false);
             return;
