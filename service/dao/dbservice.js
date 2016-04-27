@@ -3,21 +3,9 @@
  */
 
 var Sequelize = require('sequelize');
+var config = require('../../config');
 
-
-var sequelize = new Sequelize('database', 'username', 'password', {
-    host: 'localhost',
-    dialect: 'sqlite',
-
-    pool: {
-        max: 5,
-        min: 0,
-        idle: 10000
-    },
-
-    // SQLite only
-    storage: '/Users/wangjian/work/django/LiYuOA/db.sqlite3'
-});
+var sequelize = new Sequelize(config.database.name, config.database.username, config.database.password, config.database.options);
 
 //用户 、群
 var User = sequelize.define("liyuoa_lyuser", {

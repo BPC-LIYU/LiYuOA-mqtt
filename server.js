@@ -2,7 +2,7 @@
  * Created by fanjunwei on 16/4/14.
  */
 var mosca = require('mosca');
-var uuid = require("uuid")
+var uuid = require("uuid");
 var _ = require('underscore');
 var settings = {
     port: 5112,
@@ -24,6 +24,24 @@ var settings = {
         static: './'
     }
 };
+function subscribe_for_client(client, topic) {
+    var pack = {
+        "cmd": "subscribe",
+        "retain": false,
+        "qos": 1,
+        "dup": false,
+        "topic": null,
+        "payload": null,
+        "subscriptions": [
+            {
+                "topic": topic,
+                "qos": 1
+            }
+        ],
+        "messageId": (new Date()).valueOf()
+    };
+    client.handleSubscribe(pack);
+}
 var dbservice = require('./service/dao/dbservice')
 var server = new mosca.Server(settings);
 
@@ -43,7 +61,7 @@ server.authenticate = function (client, username, password, callback) {
             callback(err, false);
             return;
         }
-
+        client.user = user;
         if (server.clients[client.id]) {
             clients_callback[client.id] = callback;
 
@@ -55,11 +73,11 @@ server.authenticate = function (client, username, password, callback) {
                 obj: {
                     message_id: uuid.v4(), //服务器端id，防止重复
                     event_type: 'kick',
-                    event_obj: {message:"您的账号在别处登录"} //事件内容
+                    event_obj: {message: "您的账号在别处登录"} //事件内容
                 } //消息json信息
             };
             var message = {
-                topic: 'user/'+user.id, //group/{{group_id}}
+                topic: 'user/' + user.id, //group/{{group_id}}
                 payload: event, // or a Buffer
                 qos: 1, // 0, 1, or 2
                 retain: false // or true
@@ -68,16 +86,13 @@ server.authenticate = function (client, username, password, callback) {
             server.clients[client.id].connection.publish(message);
 
         } else {
+            callback(null, true);
             dbservice.query_group_list(user.id, function (err, groups) {
                 if (err) {
                     callback(err, false);
                     return;
                 }
-                callback(null, true);
-                client.handleSubscribe({topic: "/user/" + user.id});
-                _(groups).each(function (group) {
-                    client.handleSubscribe({topic: "/group/" + group.talkgroup_id});
-                });
+
 
 
             });
@@ -97,6 +112,17 @@ server.authorizePublish = function (client, topic, payload, callback) {
 };
 
 server.on('clientConnected', function (client) {
+    subscribe_for_client(client, "user/" + client.user.id);
+    dbservice.query_group_list(user.id, function (err, groups) {
+        if (err) {
+            callback(err, false);
+            return;
+        }
+        _(groups).each(function (group) {
+            subscribe_for_client(client, "group/" + group.talkgroup_id);
+        });
+    });
+
     console.log('Client Connected:', client.id);
 });
 
@@ -107,19 +133,7 @@ server.on('clientDisconnected', function (client) {
     if (clients_callback[client.id]) {
         var callback = clients_callback[client.id];
         clients_callback[client.id] = null;
-
-        dbservice.query_group_list(user.id, function (err, groups) {
-            if (err) {
-                callback(err, false);
-                return;
-            }
-            callback(null, true);
-            client.handleSubscribe({topic: "/user/" + user.id});
-            _(groups).each(function (group) {
-                client.handleSubscribe({topic: "/group/" + group.talkgroup_id});
-            });
-
-        });
+        callback(null, true);
     }
 
 });
