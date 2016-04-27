@@ -57,17 +57,15 @@ module.exports.login = function (username, passowrd, cb) {
             impassword: passowrd
         }
     }).then(function (user) {
-        //self.query_group_list(user.id, function(err, talkgroups){
-        //    if(err){
-        //        cb(err, null);
-        //        return;
-        //    }
-        //
-        //});
-        cb(false, user.dataValues);
+        if (user) {
+            cb(null, user.dataValues);
+        }
+        else {
+            cb({message: "im login error:用户名或密码错误", code: 501}, null);
+        }
 
     }, function (error) {
-        cb(true, null);
+        cb(error, null);
     });
 };
 

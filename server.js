@@ -57,7 +57,26 @@ server.authenticate = function (client, username, password, callback) {
     console.log('authenticate---->');
 
     dbservice.login(username, password.toString(), function (err, user) {
+        var event, message;
         if (err) {
+            event = {
+                callid: server.generateUniqueId(), //客户端用来区分回调函数的id，客户端自0~1000循环
+                type: 'event',
+                compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
+                obj: {
+                    message_id: server.generateUniqueId(), //服务器端id，防止重复
+                    event_type: 'login_error',
+                    event_obj: err //事件内容
+                } //消息json信息
+            };
+
+            message = {
+                "topic": "user/0",
+                "payload": JSON.stringify(event),
+                "qos": 0,
+                "messageId": (new Date).valueOf()
+            };
+            client.connection.publish(message);
             callback(err, false);
             return;
         }
@@ -66,23 +85,22 @@ server.authenticate = function (client, username, password, callback) {
             clients_callback[client.id] = callback;
 
 
-            var event = {
-                callid: uuid.v4(), //客户端用来区分回调函数的id，客户端自0~1000循环
+            event = {
+                callid: server.generateUniqueId(), //客户端用来区分回调函数的id，客户端自0~1000循环
                 type: 'event',
                 compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
                 obj: {
-                    message_id: uuid.v4(), //服务器端id，防止重复
+                    message_id: server.generateUniqueId(), //服务器端id，防止重复
                     event_type: 'kick',
                     event_obj: {message: "您的账号在别处登录"} //事件内容
                 } //消息json信息
             };
-            var message = {
-                topic: 'user/' + user.id, //group/{{group_id}}
-                payload: event, // or a Buffer
-                qos: 1, // 0, 1, or 2
-                retain: false // or true
+            message = {
+                "topic": 'user/' + user.id,
+                "payload": JSON.stringify(event),
+                "qos": 0,
+                "messageId": (new Date).valueOf()
             };
-
             server.clients[client.id].connection.publish(message);
 
         } else {
@@ -103,16 +121,19 @@ server.authorizePublish = function (client, topic, payload, callback) {
 };
 
 server.on('clientConnected', function (client) {
-    subscribe_for_client(client, "user/" + client.user.id);
-    dbservice.query_group_list(client.user.id, function (err, groups) {
-        if (err) {
-            callback(err, false);
-            return;
-        }
-        _(groups).each(function (group) {
-            subscribe_for_client(client, "group/" + group.talkgroup_id);
+    if (client.user) {
+        subscribe_for_client(client, "user/" + client.user.id);
+        dbservice.query_group_list(client.user.id, function (err, groups) {
+            if (err) {
+                callback(err, false);
+                return;
+            }
+            _(groups).each(function (group) {
+                subscribe_for_client(client, "group/" + group.talkgroup_id);
+            });
         });
-    });
+    }
+
 
     console.log('Client Connected:', client.id);
 });
