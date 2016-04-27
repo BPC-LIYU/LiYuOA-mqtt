@@ -84,9 +84,3 @@ var event = {
     compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
     obj: chat_message //消息json信息
 };
-var message = {
-    topic: 'user/{{uid}}', //group/{{group_id}}
-    payload: JSON.stringify(event), // or a Buffer
-    qos: 1, // 0, 1, or 2
-    retain: false // or true
-};

@@ -3,27 +3,12 @@
  */
 var mosca = require('mosca');
 var uuid = require("uuid");
+var config = require('./config');
 var _ = require('underscore');
-var settings = {
-    port: 5112,
-    backend: {
-        type: 'zmq',
-        json: false,
-        zmq: require("zmq"),
-        port: "tcp://127.0.0.1:33333",
-        controlPort: "tcp://127.0.0.1:33334",
-        delay: 5
-    },
-    persistence: {
-        factory: mosca.persistence.Memory,
-        url: "mongodb://localhost:27017/mosca2"
-    },
-    http: {
-        port: 1884,
-        bundle: true,
-        static: './'
-    }
-};
+var dbservice = require('./service/dao/dbservice');
+var server = new mosca.Server(config.mqtt);
+var clients_callback = {};
+
 function subscribe_for_client(client, topic) {
     var pack = {
         "cmd": "subscribe",
@@ -42,15 +27,28 @@ function subscribe_for_client(client, topic) {
     };
     client.handleSubscribe(pack);
 }
-var dbservice = require('./service/dao/dbservice')
-var server = new mosca.Server(settings);
 
+function publish_for_client(topic, payload) {
 
-var clients_callback = {};
+    var message = {
+        "topic": topic,
+        "payload": payload,
+        "qos": 0,
+        "messageId": (new Date).valueOf()
+    };
+    client.connection.publish(message);
+}
 
 server.on('published', function (packet, client, callback) {
     //console.log('Published', packet.payload);
     //callback("sdfsdf")
+    var topic = packet.topic;
+    var payload = packet.payload;
+
+    if (topic.indexOf('query/') === 0) {
+
+    }
+
 });
 
 server.authenticate = function (client, username, password, callback) {
@@ -69,22 +67,13 @@ server.authenticate = function (client, username, password, callback) {
                     event_obj: err //事件内容
                 } //消息json信息
             };
-
-            message = {
-                "topic": "user/0",
-                "payload": JSON.stringify(event),
-                "qos": 0,
-                "messageId": (new Date).valueOf()
-            };
-            client.connection.publish(message);
+            publish_for_client("user/0", JSON.stringify(event));
             callback(err, false);
             return;
         }
         client.user = user;
         if (server.clients[client.id]) {
             clients_callback[client.id] = callback;
-
-
             event = {
                 callid: server.generateUniqueId(), //客户端用来区分回调函数的id，客户端自0~1000循环
                 type: 'event',
@@ -95,13 +84,7 @@ server.authenticate = function (client, username, password, callback) {
                     event_obj: {message: "您的账号在别处登录"} //事件内容
                 } //消息json信息
             };
-            message = {
-                "topic": 'user/' + user.id,
-                "payload": JSON.stringify(event),
-                "qos": 0,
-                "messageId": (new Date).valueOf()
-            };
-            server.clients[client.id].connection.publish(message);
+            publish_for_client('user/' + user.id, JSON.stringify(event))
 
         } else {
             callback(null, true);
