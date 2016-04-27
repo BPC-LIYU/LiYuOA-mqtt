@@ -41,8 +41,8 @@ module.exports = {
             type: 'zmq',
             json: false,
             zmq: require("zmq"),
-            port: "tcp://127.0.0.1:33333",
-            controlPort: "tcp://127.0.0.1:33334",
+            port: "tcp://0.0.0.0:33333",
+            controlPort: "tcp://0.0.0.0:33334",
             delay: 5
         },
         persistence: {

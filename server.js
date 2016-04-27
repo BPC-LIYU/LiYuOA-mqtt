@@ -9,7 +9,7 @@ var dbservice = require('./service/dao/dbservice');
 var server = new mosca.Server(config.mqtt);
 var clients_callback = {};
 
-function subscribe_for_client(client, topic) {
+function subscribeForClient(client, topic) {
     var pack = {
         "cmd": "subscribe",
         "retain": false,
@@ -28,7 +28,7 @@ function subscribe_for_client(client, topic) {
     client.handleSubscribe(pack);
 }
 
-function publish_for_client(topic, payload) {
+function publishForClient(client, topic, payload) {
 
     var message = {
         "topic": topic,
@@ -38,16 +38,46 @@ function publish_for_client(topic, payload) {
     };
     client.connection.publish(message);
 }
-
+function handleQuery(route, parms, cb) {
+    if (route === 'test') {
+        cb(parms);
+    }
+}
 server.on('published', function (packet, client, callback) {
     //console.log('Published', packet.payload);
     //callback("sdfsdf")
+
     var topic = packet.topic;
-    var payload = packet.payload;
-
-    if (topic.indexOf('query/') === 0) {
-
+    if (client) {
+        var payload = packet.payload.toString();
+        var user_id;
+        if (client.user) {
+            user_id = client.user.id;
+        }
+        else {
+            user_id = 0;
+        }
+        if (topic.indexOf('query/') === 0) {
+            payload = JSON.parse(payload);
+            var callid = payload.callid;
+            var route = payload.route;
+            var parms = payload.parms;
+            handleQuery(route, parms, function (result) {
+                var obj = {
+                    callback_id: callid,
+                    result: result
+                };
+                var event = {
+                    message_id: server.generateUniqueId(), //服务器端id，防止重复
+                    event_type: 'query',
+                    compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
+                    obj: obj
+                };
+                publishForClient(client, "user/" + user_id, JSON.stringify(event));
+            })
+        }
     }
+
 
 });
 
@@ -67,7 +97,7 @@ server.authenticate = function (client, username, password, callback) {
                     event_obj: err //事件内容
                 } //消息json信息
             };
-            publish_for_client("user/0", JSON.stringify(event));
+            publishForClient(client, "user/0", JSON.stringify(event));
             callback(err, false);
             return;
         }
@@ -84,7 +114,7 @@ server.authenticate = function (client, username, password, callback) {
                     event_obj: {message: "您的账号在别处登录"} //事件内容
                 } //消息json信息
             };
-            publish_for_client('user/' + user.id, JSON.stringify(event))
+            publishForClient(server.clients[client.id], 'user/' + user.id, JSON.stringify(event))
 
         } else {
             callback(null, true);
@@ -105,14 +135,14 @@ server.authorizePublish = function (client, topic, payload, callback) {
 
 server.on('clientConnected', function (client) {
     if (client.user) {
-        subscribe_for_client(client, "user/" + client.user.id);
+        subscribeForClient(client, "user/" + client.user.id);
         dbservice.query_group_list(client.user.id, function (err, groups) {
             if (err) {
                 callback(err, false);
                 return;
             }
             _(groups).each(function (group) {
-                subscribe_for_client(client, "group/" + group.talkgroup_id);
+                subscribeForClient(client, "group/" + group.talkgroup_id);
             });
         });
     }
