@@ -29,3 +29,7 @@ var find = exports.find = function (table, query) {
         return db.collection(table).find(query);
     });
 };
+
+exports.addMessage = function (message) {
+    return insertOne('message', message);
+};

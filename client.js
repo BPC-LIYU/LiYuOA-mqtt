@@ -59,28 +59,28 @@ var session_update = {
 //聊天消息
 var chat_message = {
     _id: "", //服务器端消息id
-    message_type: 0, //目标类型 0:单聊 1:群聊
+    target_type: 0, //目标类型 0:单聊 1:群聊
     session_id: '', //隶属会话 详细见会话更新事件
     fuser: 1, //发送方id
-    fnick: '', //发送方昵称
+    fname: '', //发送方昵称
     fclient_type: '', //客户端clientid：[phone|web|plugin360|pluginchrome]_[user_id]:phone_12
     fdevice_id: '', //客户端设备id:xdsfsdfsd
     target: 1, //目标id
     time: 1, //时间戳
     ctype: 'txt', //消息类型:txt:文字消息；file：附件消息；location：地理位置消息；vcard：名片消息；href：超链接消息；oa：oa消息;
-    is_read: 1, //是否已读
+    is_read: false, //是否已读
     readuserlist: [{user_id: 1, is_read: true, time: ''}, {user_id: 2, is_read: false, time: ''}], //消息的接收人列表 已读未读，已读时间点
     content: 'json', //内容
     ext: 'json', //扩展字段
     id_client: 1, //客户端提供的id
     push_content: '', //推送通知时显示的内容
     push_payload: 'json', //推送通知时显示的自定义字段
-    is_push: 1, //是否推送
-    is_unreadable: 1 //是否计入未读数
+    is_push: true, //是否推送
+    is_unreadable: true //是否计入未读数
 };
 //消息体定义
 var txt = {
-    body: 'xxxx'
+    text: 'xxxx'
 };
 var file = {
     type: 'jpg',
@@ -116,10 +116,8 @@ var event = {
 
 
 //客户端发送单聊 topic send/{id}
-var send_user_message={
-    message_type: 0, //目标类型 0:单聊 1:群聊
-    fclient_type: '', //客户端clientid：[phone|web|plugin360|pluginchrome]_[user_id]:phone_12
-    fdevice_id: '', //客户端设备id:xdsfsdfsd
+var send_user_message = {
+    target_type: 0, //目标类型 0:单聊 1:群聊
     target: 1, //目标id
     ctype: 'txt', //消息类型:txt:文字消息；file：附件消息；location：地理位置消息；vcard：名片消息；href：超链接消息；oa：oa消息;
     content: 'json', //内容
@@ -127,6 +125,6 @@ var send_user_message={
     id_client: 1, //客户端提供的id
     push_content: '', //推送通知时显示的内容
     push_payload: 'json', //推送通知时显示的自定义字段
-    is_push: 1, //是否推送
-    is_unreadable: 1 //是否计入未读数
+    is_push: true, //是否推送
+    is_unreadable: true //是否计入未读数
 }

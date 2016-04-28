@@ -49,9 +49,62 @@ function publishForClient(client, topic, payload) {
     };
     client.connection.publish(message);
 }
-function handleRequest(route, parms, cb) {
+
+function handleMessage(client, parms, cb) {
+    var client_info = client.client_info || {};
+    var message = parms;
+    message.fuser = client.user.id;
+    message.fclient_type = client_info.client_type;
+    message.fdevice_id = client_info.device_id;
+    message.time = (new Date()).valueOf();
+    message.is_read = false;
+    var is_group_message = (message.target_type === 1);
+    if (is_group_message) {
+        message.session_id = message.fuser + "_p_" + message.target;
+    }
+    mongo_service.addMessage(message).then(function () {
+        var packet, payload;
+        payload = {
+            callid: (new Date()).valueOf(), //客户端用来区分回调函数的id，客户端自0~1000循环
+            type: 'chat',
+            compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
+            obj: message //消息json信息
+        };
+        if (is_group_message) {
+
+        } else {
+            packet = {
+                topic: "user/" + message.target,
+                payload: JSON.stringify(payload),
+                qos: 1,
+                retain: false
+            };
+            server.publish(packet);
+            if (message.target !== message.fuser) {
+                packet = {
+                    topic: "user/" + message.fuser,
+                    payload: JSON.stringify(payload),
+                    qos: 1,
+                    retain: false
+                };
+                server.publish(packet);
+            }
+        }
+        cb(true);
+    }, function () {
+        cb(false);
+    })
+}
+function handleRequest(client, route, parms, cb) {
     if (route === 'test') {
         cb(parms);
+    }
+    else if (route === 'send_client_info') {
+        client.client_info = parms;
+    }
+    else if (route === 'send_message') {
+
+        handleMessage(client, parms, cb);
     }
 }
 server.on('published', function (packet, client, callback) {
@@ -73,18 +126,21 @@ server.on('published', function (packet, client, callback) {
             var callid = payload.callid;
             var route = payload.route;
             var parms = payload.parms;
-            handleRequest(route, parms, function (result) {
-                var obj = {
-                    callback_id: callid,
-                    result: result
-                };
-                var event = {
-                    callid: server.generateUniqueId(), //客户端用来区分回调函数的id，客户端自0~1000循环
-                    type: 'request',
-                    compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
-                    obj: obj
-                };
-                publishForClient(client, "user/" + user_id, JSON.stringify(event));
+            handleRequest(client, route, parms, function (result) {
+                if (callid) {
+                    var obj = {
+                        callback_id: callid,
+                        result: result
+                    };
+                    var event = {
+                        callid: server.generateUniqueId(), //客户端用来区分回调函数的id，客户端自0~1000循环
+                        type: 'request',
+                        compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
+                        obj: obj
+                    };
+                    publishForClient(client, "user/" + user_id, JSON.stringify(event));
+                }
+
             })
         }
     }
@@ -95,7 +151,7 @@ server.on('published', function (packet, client, callback) {
 server.authenticate = function (client, username, password, callback) {
     logging.log('authenticate---->');
 
-    dbservice.login(username, password.toString()).then(function (user) {
+    dbservice.login(username, password).then(function (user) {
         var event;
         client.user = user;
         if (server.clients[client.id]) {
