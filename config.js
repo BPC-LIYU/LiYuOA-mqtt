@@ -36,14 +36,6 @@ module.exports = {
     },
     mqtt: {
         port: 5112,
-        backend: {
-            type: 'zmq',
-            json: false,
-            zmq: require("zmq"),
-            port: "tcp://0.0.0.0:33333",
-            controlPort: "tcp://0.0.0.0:33334",
-            delay: 5
-        },
         persistence: {
             factory: "mongo",
             url: "mongodb://localhost:27017/mosca2"

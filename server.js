@@ -8,7 +8,14 @@ var _ = require('underscore');
 var dbservice = require('./service/dao/dbservice');
 var server = new mosca.Server(config.mqtt);
 var clients_callback = {};
-
+config.mqtt['backend'] = {
+    type: 'zmq',
+    json: false,
+    zmq: require("zmq"),
+    port: "tcp://0.0.0.0:33333",
+    controlPort: "tcp://0.0.0.0:33334",
+    delay: 5
+};
 function subscribeForClient(client, topic) {
     var pack = {
         "cmd": "subscribe",
