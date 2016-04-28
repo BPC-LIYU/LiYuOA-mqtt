@@ -1,0 +1,28 @@
+{
+  "database": {
+    "name": "ly",
+    "username": "root",
+    "password": "root",
+    "options": {
+      "host": "localhost",
+      "dialect": "mysql",
+      "pool": {
+        "max": 5,
+        "min": 0,
+        "idle": 10000
+      }
+    }
+  },
+  "mqtt": {
+    "port": 5112,
+    "persistence": {
+      "factory": "mongo",
+      "url": "mongodb://localhost:27017/mosca2"
+    },
+    "http": {
+      "port": 1884,
+      "bundle": true,
+      "static": "./"
+    }
+  }
+}
