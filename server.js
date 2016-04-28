@@ -75,8 +75,8 @@ server.on('published', function (packet, client, callback) {
                     result: result
                 };
                 var event = {
-                    message_id: server.generateUniqueId(), //服务器端id，防止重复
-                    event_type: 'query',
+                    callid: server.generateUniqueId(), //客户端用来区分回调函数的id，客户端自0~1000循环
+                    type: 'query',
                     compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
                     obj: obj
                 };
