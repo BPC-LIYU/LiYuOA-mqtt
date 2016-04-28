@@ -1,7 +1,6 @@
 /**
  * Created by fanjunwei on 16/4/27.
  */
-var mosca = require('mosca');
 module.exports = {
     // database: {
     //     name: "database",
@@ -46,7 +45,7 @@ module.exports = {
             delay: 5
         },
         persistence: {
-            factory: mosca.persistence.Memory,
+            factory: "mongo",
             url: "mongodb://localhost:27017/mosca2"
         },
         http: {
