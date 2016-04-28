@@ -94,23 +94,8 @@ server.on('published', function (packet, client, callback) {
 server.authenticate = function (client, username, password, callback) {
     logging.log('authenticate---->');
 
-    dbservice.login(username, password.toString(), function (err, user) {
-        var event, message;
-        if (err) {
-            event = {
-                callid: server.generateUniqueId(), //客户端用来区分回调函数的id，客户端自0~1000循环
-                type: 'event',
-                compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
-                obj: {
-                    message_id: server.generateUniqueId(), //服务器端id，防止重复
-                    event_type: 'login_error',
-                    event_obj: err //事件内容
-                } //消息json信息
-            };
-            publishForClient(client, "user/0", JSON.stringify(event));
-            callback(err, false);
-            return;
-        }
+    dbservice.login(username, password.toString()).then(function (user) {
+        var event;
         client.user = user;
         if (server.clients[client.id]) {
             clients_callback[client.id] = callback;
@@ -130,6 +115,19 @@ server.authenticate = function (client, username, password, callback) {
             callback(null, true);
 
         }
+    }, function (err) {
+        var event = {
+            callid: server.generateUniqueId(), //客户端用来区分回调函数的id，客户端自0~1000循环
+            type: 'event',
+            compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
+            obj: {
+                message_id: server.generateUniqueId(), //服务器端id，防止重复
+                event_type: 'login_error',
+                event_obj: err //事件内容
+            } //消息json信息
+        };
+        publishForClient(client, "user/0", JSON.stringify(event));
+        callback(err, false);
     });
 
 
@@ -144,21 +142,15 @@ server.authorizePublish = function (client, topic, payload, callback) {
 };
 
 server.on('clientConnected', function (client) {
+    logging.log('Client Connected:', client.id);
     if (client.user) {
         subscribeForClient(client, "user/" + client.user.id);
-        dbservice.query_group_list(client.user.id, function (err, groups) {
-            if (err) {
-                callback(err, false);
-                return;
-            }
+        dbservice.query_group_list(client.user.id).then(function (groups) {
             _(groups).each(function (group) {
                 subscribeForClient(client, "group/" + group.talkgroup_id);
             });
         });
     }
-
-
-    logging.log('Client Connected:', client.id);
 });
 
 // fired when a client disconnects

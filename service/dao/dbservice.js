@@ -4,6 +4,7 @@
 
 var Sequelize = require('sequelize');
 var config = require('../../config');
+var Q = require('q');
 
 var sequelize = new Sequelize(config.database.name, config.database.username, config.database.password, config.database.options);
 
@@ -49,7 +50,8 @@ var TalkGroup = sequelize.define("liyuim_talkuser", {
     }
 }, {freezeTableName: true, timestamps: false});
 
-module.exports.login = function (username, passowrd, cb) {
+module.exports.login = function (username, passowrd) {
+    var defered = Q.defer();
     //var self = this;
     User.findOne({
         where: {
@@ -58,27 +60,30 @@ module.exports.login = function (username, passowrd, cb) {
         }
     }).then(function (user) {
         if (user) {
-            cb(null, user.dataValues);
+            defered.resolve(user.dataValues);
         }
         else {
-            cb({message: "im login error:用户名或密码错误", code: 501}, null);
+            defered.reject({message: "im login error:用户名或密码错误", code: 501})
         }
 
     }, function (error) {
-        cb(error, null);
+        defered.reject(error);
     });
+    return defered.promise;
 };
 
 
 module.exports.query_group_list = function (user_id, cb) {
+    var defered = Q.defer();
     TalkGroup.findAll({
         where: {
             user_id: 1,
             is_active: true
         }
     }).then(function (talkgroups) {
-        cb(false, talkgroups.dataValues);
+        defered.resolve(talkgroups.dataValues);
     }, function (error) {
-        cb(true, null);
+        defered.reject(error);
     });
+    return defered.promise;
 };
