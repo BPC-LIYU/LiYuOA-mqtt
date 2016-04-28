@@ -59,18 +59,18 @@ var session_update = {
 //聊天消息
 var chat_message = {
     message_id: "", //服务器端消息id
+    message_type: 0, //目标类型 0:单聊 1:群聊
     session_id: '', //隶属会话 详细见会话更新事件
     fuser: 1, //发送方id
     fnick: '', //发送方昵称
-    fclient_id: '', //客户端clientid：[phone|web|plugin360|pluginchrome]_[user_id]:phone_12
+    fclient_type: '', //客户端clientid：[phone|web|plugin360|pluginchrome]_[user_id]:phone_12
     fdevice_id: '', //客户端设备id:xdsfsdfsd
     target: 1, //目标id
-    target_type: 1, //目标类型
     time: 1, //时间戳
-    ctype: 1, //消息类型:0:文字消息；1：图片消息；2：附件消息；3：音频消息；4：视频消息；5：地理位置消息；6：名片消息；7：超链接消息；8：oa消息；9：动态表情消息；10:自定义
+    ctype: 'txt', //消息类型:txt:文字消息；file：附件消息；location：地理位置消息；vcard：名片消息；href：超链接消息；oa：oa消息;
     is_read: 1, //是否已读
     readuserlist: [{user_id: 1, is_read: true, time: ''}, {user_id: 2, is_read: false, time: ''}], //消息的接收人列表 已读未读，已读时间点
-    content: '', //内容
+    content: 'json', //内容
     ext: 'json', //扩展字段
     id_client: 1, //客户端提供的id
     push_content: '', //推送通知时显示的内容
@@ -78,6 +78,35 @@ var chat_message = {
     is_push: 1, //是否推送
     is_unreadable: 1 //是否计入未读数
 };
+//消息体定义
+var txt = {
+    body: 'xxxx'
+};
+var file = {
+    type: 'jpg',
+    url: "http://xxx",
+    //缩略图,可空
+    thumbnail: 'http://xxx'
+};
+
+var location = {
+    address: "地址",
+    name: "名称",
+    //纬度
+    latitude: 39.9,
+    //经度
+    longitude: 116.3
+
+};
+
+var vcard = {
+    uid: 1
+};
+var href = {
+    href: "http://www.baidu.com"
+};
+var oa = {};
+
 var event = {
     callid: 1, //客户端用来区分回调函数的id，客户端自0~1000循环
     type: 'chat|event|query',

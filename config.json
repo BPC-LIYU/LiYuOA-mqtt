@@ -24,5 +24,33 @@
       "bundle": true,
       "static": "./"
     }
+  },
+  "mongo": {
+    "host": "mongodb://127.0.0.1:27017/ly"
+  },
+  "logging": {
+    "appenders": [
+      {
+        "type": "console"
+      },
+      {
+        "type": "dateFile",
+        "filename": "debug",
+        "pattern": "-yyyy-MM-dd.log",
+        "maxLogSize": 20480,
+        "alwaysIncludePattern": true,
+        "backups": 3,
+        "category": "debug"
+      },
+      {
+        "type": "dateFile",
+        "filename": "error",
+        "pattern": "-yyyy-MM-dd.log",
+        "maxLogSize": 20480,
+        "alwaysIncludePattern": true,
+        "backups": 3,
+        "category": "error"
+      }
+    ]
   }
 }

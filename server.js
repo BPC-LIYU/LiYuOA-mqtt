@@ -7,6 +7,9 @@ var config = require('./config');
 var _ = require('underscore');
 var dbservice = require('./service/dao/dbservice');
 var server = new mosca.Server(config.mqtt);
+var logging = require('./service/log_service');
+
+
 var clients_callback = {};
 config.mqtt['backend'] = {
     type: 'zmq',
@@ -51,7 +54,7 @@ function handleQuery(route, parms, cb) {
     }
 }
 server.on('published', function (packet, client, callback) {
-    //console.log('Published', packet.payload);
+    //logging.log('Published', packet.payload);
     //callback("sdfsdf")
 
     var topic = packet.topic;
@@ -89,7 +92,7 @@ server.on('published', function (packet, client, callback) {
 });
 
 server.authenticate = function (client, username, password, callback) {
-    console.log('authenticate---->');
+    logging.log('authenticate---->');
 
     dbservice.login(username, password.toString(), function (err, user) {
         var event, message;
@@ -132,11 +135,11 @@ server.authenticate = function (client, username, password, callback) {
 
 };
 server.authorizeSubscribe = function (client, topic, callback) {
-    console.log('authorizeSubscribe---->');
+    logging.log('authorizeSubscribe---->');
     callback(null, true);
 };
 server.authorizePublish = function (client, topic, payload, callback) {
-    //console.log('authorizePublish---->');
+    //logging.log('authorizePublish---->');
     callback(null, true);
 };
 
@@ -155,12 +158,12 @@ server.on('clientConnected', function (client) {
     }
 
 
-    console.log('Client Connected:', client.id);
+    logging.log('Client Connected:', client.id);
 });
 
 // fired when a client disconnects
 server.on('clientDisconnected', function (client) {
-    console.log('Client Disconnected:', client.id);
+    logging.log('Client Disconnected:', client.id);
 
     if (clients_callback[client.id]) {
         var callback = clients_callback[client.id];
@@ -171,7 +174,7 @@ server.on('clientDisconnected', function (client) {
 });
 
 server.on('ready', function () {
-    console.log('mqtt is running...');
+    logging.log('mqtt is running...');
 
     //var message = {
     //    topic: 'test',
@@ -202,7 +205,7 @@ function sayHello(call, callback) {
         retain: false // or true
     };
     server.publish(message);
-    console.log('sayHello ...');
+    logging.log('sayHello ...');
     callback(null, {message: 'Hello ' + call.request.name});
 }
 
