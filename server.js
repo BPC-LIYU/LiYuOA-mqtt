@@ -6,6 +6,7 @@ var uuid = require("uuid");
 var config = require('./config');
 var _ = require('underscore');
 var dbservice = require('./service/dao/dbservice');
+var mongo_service = require('./service/dao/mongo_service');
 var server = new mosca.Server(config.mqtt);
 var logging = require('./service/log_service');
 
@@ -48,7 +49,7 @@ function publishForClient(client, topic, payload) {
     };
     client.connection.publish(message);
 }
-function handleQuery(route, parms, cb) {
+function handleRequest(route, parms, cb) {
     if (route === 'test') {
         cb(parms);
     }
@@ -67,19 +68,19 @@ server.on('published', function (packet, client, callback) {
         else {
             user_id = 0;
         }
-        if (topic.indexOf('query/') === 0) {
+        if (topic.indexOf('request/') === 0) {
             payload = JSON.parse(payload);
             var callid = payload.callid;
             var route = payload.route;
             var parms = payload.parms;
-            handleQuery(route, parms, function (result) {
+            handleRequest(route, parms, function (result) {
                 var obj = {
                     callback_id: callid,
                     result: result
                 };
                 var event = {
                     callid: server.generateUniqueId(), //客户端用来区分回调函数的id，客户端自0~1000循环
-                    type: 'query',
+                    type: 'request',
                     compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
                     obj: obj
                 };

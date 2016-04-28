@@ -26,7 +26,7 @@
     }
   },
   "mongo": {
-    "host": "mongodb://127.0.0.1:27017/ly"
+    "url": "mongodb://127.0.0.1:27017/ly"
   },
   "logging": {
     "appenders": [

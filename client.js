@@ -58,7 +58,7 @@ var session_update = {
 
 //聊天消息
 var chat_message = {
-    message_id: "", //服务器端消息id
+    _id: "", //服务器端消息id
     message_type: 0, //目标类型 0:单聊 1:群聊
     session_id: '', //隶属会话 详细见会话更新事件
     fuser: 1, //发送方id
@@ -109,7 +109,24 @@ var oa = {};
 
 var event = {
     callid: 1, //客户端用来区分回调函数的id，客户端自0~1000循环
-    type: 'chat|event|query',
+    type: 'chat|event|request',
     compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
     obj: chat_message //消息json信息
 };
+
+
+//客户端发送单聊 topic send/{id}
+var send_user_message={
+    message_type: 0, //目标类型 0:单聊 1:群聊
+    fclient_type: '', //客户端clientid：[phone|web|plugin360|pluginchrome]_[user_id]:phone_12
+    fdevice_id: '', //客户端设备id:xdsfsdfsd
+    target: 1, //目标id
+    ctype: 'txt', //消息类型:txt:文字消息；file：附件消息；location：地理位置消息；vcard：名片消息；href：超链接消息；oa：oa消息;
+    content: 'json', //内容
+    ext: 'json', //扩展字段
+    id_client: 1, //客户端提供的id
+    push_content: '', //推送通知时显示的内容
+    push_payload: 'json', //推送通知时显示的自定义字段
+    is_push: 1, //是否推送
+    is_unreadable: 1 //是否计入未读数
+}
