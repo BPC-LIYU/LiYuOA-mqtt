@@ -150,7 +150,11 @@ server.on('published', function (packet, client, callback) {
 
 server.authenticate = function (client, username, password, callback) {
     logging.log('authenticate---->');
-
+    if (!username || !password) {
+        logging.log('用户名或密码为空');
+        callback(err, false);
+        return;
+    }
     dbservice.login(username, password).then(function (user) {
         var event;
         client.user = user;
@@ -167,7 +171,7 @@ server.authenticate = function (client, username, password, callback) {
                 } //消息json信息
             };
             publishForClient(server.clients[client.id], 'user/' + user.id, JSON.stringify(event))
-
+            callback(err, false);
         } else {
             callback(null, true);
 
