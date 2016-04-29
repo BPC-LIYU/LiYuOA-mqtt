@@ -69,6 +69,7 @@ var chat_message = {
     time: 1, //时间戳
     ctype: 'txt', //消息类型:txt:文字消息；file：附件消息；location：地理位置消息；vcard：名片消息；href：超链接消息；oa：oa消息;
     is_read: false, //是否已读
+    userlist: [1, 2, 3],
     readuserlist: [{user_id: 1, is_read: true, time: ''}, {user_id: 2, is_read: false, time: ''}], //消息的接收人列表 已读未读，已读时间点
     content: 'json', //内容
     ext: 'json', //扩展字段
@@ -117,6 +118,7 @@ var event = {
 
 //客户端发送单聊 topic send/{id}
 var send_user_message = {
+    fname: "name",
     target_type: 0, //目标类型 0:单聊 1:群聊
     target: 1, //目标id
     ctype: 'txt', //消息类型:txt:文字消息；file：附件消息；location：地理位置消息；vcard：名片消息；href：超链接消息；oa：oa消息;
@@ -126,5 +128,6 @@ var send_user_message = {
     push_content: '', //推送通知时显示的内容
     push_payload: 'json', //推送通知时显示的自定义字段
     is_push: true, //是否推送
-    is_unreadable: true //是否计入未读数
+    is_unreadable: true, //是否计入未读数
+    readuserlist: [1, 2]
 }

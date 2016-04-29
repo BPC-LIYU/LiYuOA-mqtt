@@ -61,6 +61,10 @@ function handleMessage(client, parms, cb) {
     var is_group_message = (message.target_type === 1);
     if (is_group_message) {
         message.session_id = message.fuser + "_g_" + message.target;
+        message.readuserlist = [];
+        _(message.userlist).each(function (id) {
+            message.readuserlist.push({user_id: id, is_read: false, time: null});
+        })
     }
     else {
         message.session_id = message.fuser + "_p_" + message.target;
