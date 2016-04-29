@@ -60,6 +60,9 @@ function handleMessage(client, parms, cb) {
     message.is_read = false;
     var is_group_message = (message.target_type === 1);
     if (is_group_message) {
+        message.session_id = message.fuser + "_g_" + message.target;
+    }
+    else {
         message.session_id = message.fuser + "_p_" + message.target;
     }
     mongo_service.addMessage(message).then(function () {
@@ -70,12 +73,20 @@ function handleMessage(client, parms, cb) {
             compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
             obj: message //消息json信息
         };
+        payload = JSON.stringify(payload);
         if (is_group_message) {
-
+            packet = {
+                topic: "group/" + message.target,
+                payload: payload,
+                qos: 1,
+                retain: false
+            };
+            server.publish(packet);
         } else {
+
             packet = {
                 topic: "user/" + message.target,
-                payload: JSON.stringify(payload),
+                payload: payload,
                 qos: 1,
                 retain: false
             };
@@ -83,7 +94,7 @@ function handleMessage(client, parms, cb) {
             if (message.target !== message.fuser) {
                 packet = {
                     topic: "user/" + message.fuser,
-                    payload: JSON.stringify(payload),
+                    payload: payload,
                     qos: 1,
                     retain: false
                 };
@@ -152,7 +163,7 @@ server.authenticate = function (client, username, password, callback) {
     logging.log('authenticate---->');
     if (!username || !password) {
         logging.log('用户名或密码为空');
-        callback(err, false);
+        callback(null, false);
         return;
     }
     dbservice.login(username, password).then(function (user) {
@@ -170,8 +181,7 @@ server.authenticate = function (client, username, password, callback) {
                     event_obj: {message: "您的账号在别处登录"} //事件内容
                 } //消息json信息
             };
-            publishForClient(server.clients[client.id], 'user/' + user.id, JSON.stringify(event))
-            callback(err, false);
+            publishForClient(server.clients[client.id], 'user/' + user.id, JSON.stringify(event));
         } else {
             callback(null, true);
 
