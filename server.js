@@ -50,7 +50,29 @@ function publishForClient(client, topic, payload) {
     client.connection.publish(message);
 }
 
+/**
+ * 参数必填校验
+ * by:王健 at:2016-04-29
+ * @param message
+ * @param attr
+ * @returns {boolean}
+ */
+function check_msg(message, attr) {
+    var is_ok = true;
+    _(attr).each(function (item) {
+        if(message[item] === undefined){
+            is_ok = false;
+            console.log(item + "属性没有提供");
+        }
+    });
+    return is_ok;
+}
+
+
 function handleMessage(client, parms, cb) {
+    if(check_msg(parms, ["fname","target_type", "target", "ctype", "content", "id_client", "push_content", "is_push", "is_unreadable"])){
+        cb(false);
+    }
     var client_info = client.client_info || {};
     var message = parms;
     message.fuser = client.user.id;
