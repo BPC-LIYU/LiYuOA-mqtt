@@ -42,7 +42,7 @@ var message_read = {
 
 //会话更新事件
 var session_update = {
-    id: '', //服务器端id，
+    _id: '', //服务器端id，
     session_id: '', //每个会话一个id：好友会话[user_id]_p_[user_id] : 群会话[user_id]_g_[group_id]：系统会话[user_id]_s_[sys_id]
     owner_id: 1, //用户id
     target: 1, //聊天对象id
@@ -60,7 +60,6 @@ var session_update = {
 var chat_message = {
     _id: "", //服务器端消息id
     target_type: 0, //目标类型 0:单聊 1:群聊
-    session_id: '', //隶属会话 详细见会话更新事件
     fuser: 1, //发送方id
     fname: '', //发送方昵称
     fclient_type: '', //客户端clientid：[phone|web|plugin360|pluginchrome]_[user_id]:phone_12
