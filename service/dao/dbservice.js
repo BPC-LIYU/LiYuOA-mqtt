@@ -72,12 +72,17 @@ module.exports.login = function (username, passowrd) {
     return defered.promise;
 };
 
-
-module.exports.query_group_list = function (user_id, cb) {
+/**
+ * 修改获取分组函数,使用正确参数, 除去cb 使用promise
+ * by:王健 at:2016-04-29
+ * @param user_id
+ * @returns {*}
+ */
+module.exports.query_group_list = function (user_id) {
     var defered = Q.defer();
     TalkGroup.findAll({
         where: {
-            user_id: 1,
+            user_id: user_id,
             is_active: true
         }
     }).then(function (talkgroups) {
