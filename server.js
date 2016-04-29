@@ -132,6 +132,7 @@ function handleMessage(client, parms, cb) {
         cb(false);
     })
 }
+
 function handleRequest(client, route, parms, cb) {
     if (route === 'test') {
         cb(parms);
@@ -278,24 +279,45 @@ server.on('ready', function () {
     main();
 });
 
-var PROTO_PATH = __dirname + '/api/helloworld.proto';
+
+
+function handleIMCommend(route, parms, cb) {
+    if (route === 'test') {
+        cb(parms);
+    }
+    else if (route === 'send_client_info') {
+        client.client_info = parms;
+    }
+    else if (route === 'send_message') {
+
+        handleMessage(client, parms, cb);
+    }
+}
+
+
+var PROTO_PATH = __dirname + '/api/liyuim.proto';
 
 var grpc = require('grpc');
-var hello_proto = grpc.load(PROTO_PATH).helloworld;
+var im_proto = grpc.load(PROTO_PATH).im;
 
 /**
  * Implements the SayHello RPC method.
  */
-function sayHello(call, callback) {
-    var message = {
-        topic: 'test',
-        payload: '1111111', // or a Buffer
-        qos: 1, // 0, 1, or 2
-        retain: false // or true
-    };
-    server.publish(message);
-    logging.log('sayHello ...');
-    callback(null, {message: 'Hello ' + call.request.name});
+function commendIm(call, callback) {
+
+    logging.log('im commend ...');
+    request = JSON.parse(call.request.commend);
+    handleIMCommend(request.route, request.parms, function (err, result) {
+        var msg = null;
+        if(err){
+            msg ={success:false, message:err}
+        }else{
+            msg = {success:true, result: result}
+        }
+        callback(null, {result: JSON.stringify(msg)});
+    });
+
+
 }
 
 /**
@@ -304,7 +326,7 @@ function sayHello(call, callback) {
  */
 function main() {
     var server = new grpc.Server();
-    server.addProtoService(hello_proto.Greeter.service, {sayHello: sayHello});
+    server.addProtoService(im_proto.MqttCommend.service, {commendIm: commendIm});
     server.bind('0.0.0.0:50051', grpc.ServerCredentials.createInsecure());
     server.start();
 }
