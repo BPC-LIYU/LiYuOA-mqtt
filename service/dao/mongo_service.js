@@ -88,3 +88,7 @@ exports.addMessage = function (message) {
 exports.addChatSession = function (chat_session) {
     return updateOrInsert('chat_session', {session_id: chat_session.session_id}, chat_session);
 };
+
+exports.queryChatSessionList = function (user_id) {
+    return find('chat_session', {owner: user_id});
+};

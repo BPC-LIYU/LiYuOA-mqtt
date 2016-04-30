@@ -9,6 +9,7 @@ var dbservice = require('./service/dao/dbservice');
 var mongo_service = require('./service/dao/mongo_service');
 var server = new mosca.Server(config.mqtt);
 var logging = require('./service/log_service');
+var Q = require('q');
 
 
 var clients_callback = {};
@@ -62,7 +63,7 @@ function check_msg(message, attr) {
     _(attr).each(function (item) {
         if (message[item] === undefined) {
             is_ok = false;
-            console.log(item + "属性没有提供");
+            logging.error(item + "属性没有提供");
         }
     });
     return is_ok;
@@ -186,9 +187,10 @@ function handleChatSession(message) {
 
 }
 
-function handleMessage(client, parms, cb) {
+function handleMessage(client, parms) {
+    var defered = Q.defer();
     if (check_msg(parms, ["fname", "target_type", "target", "ctype", "content", "id_client", "push_content", "is_push", "is_unreadable"])) {
-        cb(false);
+        defered.reject();
     }
     var client_info = client.client_info || {};
     var message = parms;
@@ -249,25 +251,47 @@ function handleMessage(client, parms, cb) {
                     server.publish(packet);
                 }
             }
-            cb(true);
-        }, function () {
-            cb(false);
+            handleChatSession(message);
+            defered.resolve();
+        }, function (error) {
+            defered.reject(error);
         })
     }
 
+    return defered.promise;
 }
 
-function handleRequest(client, route, parms, cb) {
+function handleGetChatSession(client, parms) {
+    if (client.user) {
+        return mongo_service.queryChatSessionList(client.user.id)
+    }
+    else {
+        var defered = Q.defer();
+        defered.reject('未登录');
+        return defered.promise;
+    }
+
+}
+function handleRequest(client, route, parms) {
+    var defered;
     if (route === 'test') {
-        cb(parms);
+        defered = Q.defer();
+        defered.resolve(parms);
+        return defered.promise;
     }
     else if (route === 'send_client_info') {
+        defered = Q.defer();
         client.client_info = parms;
+        defered.resolve();
+        return defered.promise;
     }
     else if (route === 'send_message') {
-
-        handleMessage(client, parms, cb);
+        return handleMessage(client, parms);
     }
+    else if (route === 'get_chat_session') {
+        return handleGetChatSession(client, parms);
+    }
+
 }
 server.on('published', function (packet, client, callback) {
     //logging.log('Published', packet.payload);
@@ -288,7 +312,7 @@ server.on('published', function (packet, client, callback) {
             var callid = payload.callid;
             var route = payload.route;
             var parms = payload.parms;
-            handleRequest(client, route, parms, function (result) {
+            handleRequest(client, route, parms).then(function (result) {
                 if (callid) {
                     var obj = {
                         callback_id: callid,
@@ -303,6 +327,8 @@ server.on('published', function (packet, client, callback) {
                     publishForClient(client, "user/" + user_id, JSON.stringify(event));
                 }
 
+            }, function (error) {
+                logging.error("request error", route, parms, error);
             })
         }
     }
@@ -404,16 +430,21 @@ server.on('ready', function () {
 });
 
 
-function handleIMCommend(route, parms, cb) {
+function handleIMCommend(route, parms) {
+    var defered;
     if (route === 'test') {
-        cb(parms);
+        defered = Q.defer();
+        defered.resolve(parms);
+        return defered.promise;
     }
     else if (route === 'send_client_info') {
+        defered = Q.defer();
         client.client_info = parms;
+        defered.resolve();
+        return defered.promise;
     }
     else if (route === 'send_message') {
-
-        handleMessage(client, parms, cb);
+        // handleMessage(client, parms);
     }
 }
 
@@ -430,7 +461,7 @@ function commendIm(call, callback) {
 
     logging.log('im commend ...');
     request = JSON.parse(call.request.commend);
-    handleIMCommend(request.route, request.parms, function (err, result) {
+    handleIMCommend(request.route, request.parms).then(function (err, result) {
         var msg = null;
         if (err) {
             msg = {success: false, message: err}
