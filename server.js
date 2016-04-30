@@ -60,7 +60,7 @@ function publishForClient(client, topic, payload) {
 function check_msg(message, attr) {
     var is_ok = true;
     _(attr).each(function (item) {
-        if(message[item] === undefined){
+        if (message[item] === undefined) {
             is_ok = false;
             console.log(item + "属性没有提供");
         }
@@ -69,8 +69,36 @@ function check_msg(message, attr) {
 }
 
 
+function handleMessageSession(message) {
+    /*
+     session_id: '', //每个会话一个id：好友会话[user_id]_p_[user_id] : 群会话[user_id]_g_[group_id]：系统会话[user_id]_s_[sys_id]
+     owner_id: 1, //用户id
+     target: 1, //聊天对象id
+     target_type: 1, //聊天对象类型
+     is_top: true, //是否置顶
+     nickname: '', //显示昵称
+     content: '', //显示最后一条内容
+     update_time: '', //最后一条时间
+     time: 112,  //已读时间戳
+     unread: 12 //未读消息数
+     */
+    var chat_session = {};
+    var is_group_message = (message.target_type === 1);
+    if (is_group_message) {
+        chat_session.session_id = message.fuser + "_g_" + message.target;
+    }
+    else {
+        chat_session.session_id = message.fuser + "_p_" + message.target;
+    }
+    chat_session.owner_id = message.fuser;
+    chat_session.target = message.target;
+    chat_session.target_type = message.target_type;
+
+
+}
+
 function handleMessage(client, parms, cb) {
-    if(check_msg(parms, ["fname","target_type", "target", "ctype", "content", "id_client", "push_content", "is_push", "is_unreadable"])){
+    if (check_msg(parms, ["fname", "target_type", "target", "ctype", "content", "id_client", "push_content", "is_push", "is_unreadable"])) {
         cb(false);
     }
     var client_info = client.client_info || {};
@@ -82,14 +110,12 @@ function handleMessage(client, parms, cb) {
     message.is_read = false;
     var is_group_message = (message.target_type === 1);
     if (is_group_message) {
-        message.session_id = message.fuser + "_g_" + message.target;
         message.readuserlist = [];
         _(message.userlist).each(function (id) {
             message.readuserlist.push({user_id: id, is_read: false, time: null});
         })
     }
     else {
-        message.session_id = message.fuser + "_p_" + message.target;
     }
     mongo_service.addMessage(message).then(function () {
         var packet, payload;
