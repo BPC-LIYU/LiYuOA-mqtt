@@ -1,0 +1,27 @@
+
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.liyu.oa.im";
+option java_outer_classname = "LiYuOAIMProto";
+option objc_class_prefix = "LY";
+
+package im;
+
+// The greeting service definition.
+service MqttCommend {
+
+  // pass apply push client
+  rpc CommendIm (IMRequest) returns (IMResult) {}
+
+}
+
+// The request message containing the user's name.
+message IMRequest {
+  string commend = 1;
+}
+
+// The response message containing the greetings
+message IMResult {
+  string result = 1;
+}
