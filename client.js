@@ -86,7 +86,8 @@ var file = {
     type: 'jpg',
     url: "http://xxx",
     //缩略图,可空
-    thumbnail: 'http://xxx'
+    thumbnail: 'http://xxx',
+    text: '[图片]'
 };
 
 var location = {
@@ -95,15 +96,18 @@ var location = {
     //纬度
     latitude: 39.9,
     //经度
-    longitude: 116.3
+    longitude: 116.3,
+    text: '[位置]'
 
 };
 
 var vcard = {
-    uid: 1
+    uid: 1,
+    text: '[名片]'
 };
 var href = {
-    href: "http://www.baidu.com"
+    href: "http://www.baidu.com",
+    text: '[网址]'
 };
 var oa = {};
 
