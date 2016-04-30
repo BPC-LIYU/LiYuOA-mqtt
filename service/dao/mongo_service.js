@@ -59,6 +59,32 @@ var update = exports.update = function (table, query, set_obj) {
         return result;
     });
 };
+
+var updateOrInsert = exports.updateOrInsert = function (table, query, set_obj) {
+    query = query || {};
+    set_obj = set_obj || {};
+    return mongoConnect().then(function (db) {
+        var collection = db.collection(table);
+        var result = Q.nfcall(collection.updateOne.bind(collection), query, {"$set": set_obj}).then(function (update_result) {
+            if (update_result.modifiedCount > 0) {
+                return update_result;
+            }
+            else {
+                return Q.nfcall(collection.insertOne.bind(collection), set_obj);
+            }
+        });
+        result.then(function (result) {
+            db.close();
+        }, function () {
+            db.close();
+        });
+        return result;
+    });
+};
 exports.addMessage = function (message) {
     return insertOne('message', message);
+};
+
+exports.addChatSession = function (chat_session) {
+    return updateOrInsert('chat_session', {session_id: chat_session.session_id}, chat_session);
 };

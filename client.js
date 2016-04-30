@@ -44,14 +44,14 @@ var message_read = {
 var session_update = {
     _id: '', //服务器端id，
     session_id: '', //每个会话一个id：好友会话[user_id]_p_[user_id] : 群会话[user_id]_g_[group_id]：系统会话[user_id]_s_[sys_id]
-    owner_id: 1, //用户id
+    owner: 1, //用户id
     target: 1, //聊天对象id
     target_type: 1, //聊天对象类型
     is_top: true, //是否置顶
-    nickname: '', //显示昵称
-    content: '', //显示最后一条内容
-    update_time: '', //最后一条时间
-    time: 112,  //已读时间戳
+    name: '', //显示昵称
+    last_message: {ctype: "", content: ''},//显示最后一条内容
+    last_message_time: '', //最后一条时间
+    read_time: 112,  //已读时间戳
     unread: 12 //未读消息数
 };
 

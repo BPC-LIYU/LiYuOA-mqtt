@@ -69,30 +69,119 @@ function check_msg(message, attr) {
 }
 
 
-function handleMessageSession(message) {
+function handleChatSession(message) {
     /*
      session_id: '', //每个会话一个id：好友会话[user_id]_p_[user_id] : 群会话[user_id]_g_[group_id]：系统会话[user_id]_s_[sys_id]
-     owner_id: 1, //用户id
+     owner: 1, //用户id
      target: 1, //聊天对象id
      target_type: 1, //聊天对象类型
      is_top: true, //是否置顶
-     nickname: '', //显示昵称
-     content: '', //显示最后一条内容
-     update_time: '', //最后一条时间
-     time: 112,  //已读时间戳
-     unread: 12 //未读消息数
+     name: '', //显示昵称
+     last_message: {ctype: "", content: '',},//显示最后一条内容
+     last_message_time: '', //最后一条时间
      */
-    var chat_session = {};
-    var is_group_message = (message.target_type === 1);
-    if (is_group_message) {
-        chat_session.session_id = message.fuser + "_g_" + message.target;
+
+
+    function get_target_name(message) {
+        var defered = Q.defer();
+        var is_group_message = (message.target_type === 1);
+        if (is_group_message) {
+            dbservice.get_group_info(message.target).then(function (info) {
+                defered.resolve(info.name);
+            }, function () {
+                defered.resolve();
+            })
+        }
+        else {
+            dbservice.get_user_info(message.target).then(function (info) {
+                defered.resolve(info.realname);
+            }, function () {
+                defered.resolve();
+            })
+        }
+        return defered.promise;
     }
-    else {
-        chat_session.session_id = message.fuser + "_p_" + message.target;
+
+    function create_chat_message(message, from, to, name) {
+        var chat_session, is_group_message;
+        chat_session = {};
+        is_group_message = (message.target_type === 1);
+        if (is_group_message) {
+            chat_session.session_id = from + "_g_" + to;
+        }
+        else {
+            chat_session.session_id = from + "_p_" + to;
+        }
+        chat_session.owner = from;
+        chat_session.target = to;
+        chat_session.target_type = message.target_type;
+        chat_session.name = name;
+        chat_session.last_message = {ctype: message.ctype, content: message.content};
+        chat_session.last_message_time = message.time;
+        return chat_session;
     }
-    chat_session.owner_id = message.fuser;
-    chat_session.target = message.target;
-    chat_session.target_type = message.target_type;
+
+    get_target_name(message).then(function (target_name) {
+        var chat_session, is_group_message, packet, payload;
+        is_group_message = (message.target_type === 1);
+        if (is_group_message) {
+            _(message.userlist).each(function (id) {
+                var chat_session;
+                chat_session = create_chat_message(message, id, message.target, target_name);
+                mongo_service.addChatSession(chat_session);
+
+                payload = {
+                    type: 'chat_session',
+                    compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
+                    obj: chat_session //消息json信息
+                };
+                packet = {
+                    topic: "group/" + message.target,
+                    payload: JSON.stringify(payload),
+                    qos: 1,
+                    retain: false
+                };
+                server.publish(packet);
+
+            });
+        }
+        else {
+            chat_session = create_chat_message(message, message.fuser, message.target, target_name);
+            mongo_service.addChatSession(chat_session);
+            payload = {
+                type: 'chat_session',
+                compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
+                obj: chat_session //消息json信息
+            };
+            packet = {
+                topic: "user/" + message.target,
+                payload: JSON.stringify(payload),
+                qos: 1,
+                retain: false
+            };
+            server.publish(packet);
+            if (message.fuser !== message.target) {
+                chat_session = create_chat_message(message, message.target, message.fuser, message.fname);
+                mongo_service.addChatSession(chat_session);
+
+                payload = {
+                    type: 'chat_session',
+                    compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
+                    obj: chat_session //消息json信息
+                };
+                packet = {
+                    topic: "user/" + message.target,
+                    payload: JSON.stringify(payload),
+                    qos: 1,
+                    retain: false
+                };
+                server.publish(packet);
+            }
+
+        }
+
+
+    });
 
 
 }
@@ -110,53 +199,62 @@ function handleMessage(client, parms, cb) {
     message.is_read = false;
     var is_group_message = (message.target_type === 1);
     if (is_group_message) {
-        message.readuserlist = [];
-        _(message.userlist).each(function (id) {
-            message.readuserlist.push({user_id: id, is_read: false, time: null});
+        dbservice.query_group_members(message.target).then(function (data) {
+            message.readuserlist = [];
+            message.readuserlist = [];
+            _(data).each(function (user) {
+                message.readuserlist.push(user.user_id);
+                message.readuserlist.push({user_id: user.user_id, is_read: false, time: null});
+            });
+            save_message(message);
         })
     }
     else {
+        save_message(message);
     }
-    mongo_service.addMessage(message).then(function () {
-        var packet, payload;
-        payload = {
-            callid: (new Date()).valueOf(), //客户端用来区分回调函数的id，客户端自0~1000循环
-            type: 'chat',
-            compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
-            obj: message //消息json信息
-        };
-        payload = JSON.stringify(payload);
-        if (is_group_message) {
-            packet = {
-                topic: "group/" + message.target,
-                payload: payload,
-                qos: 1,
-                retain: false
+    function save_message(message) {
+        mongo_service.addMessage(message).then(function () {
+            var packet, payload;
+            payload = {
+                callid: (new Date()).valueOf(), //客户端用来区分回调函数的id，客户端自0~1000循环
+                type: 'chat',
+                compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
+                obj: message //消息json信息
             };
-            server.publish(packet);
-        } else {
-
-            packet = {
-                topic: "user/" + message.target,
-                payload: payload,
-                qos: 1,
-                retain: false
-            };
-            server.publish(packet);
-            if (message.target !== message.fuser) {
+            payload = JSON.stringify(payload);
+            if (is_group_message) {
                 packet = {
-                    topic: "user/" + message.fuser,
+                    topic: "group/" + message.target,
                     payload: payload,
                     qos: 1,
                     retain: false
                 };
                 server.publish(packet);
+            } else {
+
+                packet = {
+                    topic: "user/" + message.target,
+                    payload: payload,
+                    qos: 1,
+                    retain: false
+                };
+                server.publish(packet);
+                if (message.target !== message.fuser) {
+                    packet = {
+                        topic: "user/" + message.fuser,
+                        payload: payload,
+                        qos: 1,
+                        retain: false
+                    };
+                    server.publish(packet);
+                }
             }
-        }
-        cb(true);
-    }, function () {
-        cb(false);
-    })
+            cb(true);
+        }, function () {
+            cb(false);
+        })
+    }
+
 }
 
 function handleRequest(client, route, parms, cb) {
@@ -306,7 +404,6 @@ server.on('ready', function () {
 });
 
 
-
 function handleIMCommend(route, parms, cb) {
     if (route === 'test') {
         cb(parms);
@@ -335,10 +432,10 @@ function commendIm(call, callback) {
     request = JSON.parse(call.request.commend);
     handleIMCommend(request.route, request.parms, function (err, result) {
         var msg = null;
-        if(err){
-            msg ={success:false, message:err}
-        }else{
-            msg = {success:true, result: result}
+        if (err) {
+            msg = {success: false, message: err}
+        } else {
+            msg = {success: true, result: result}
         }
         callback(null, {result: JSON.stringify(msg)});
     });

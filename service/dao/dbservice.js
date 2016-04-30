@@ -15,6 +15,10 @@ var User = sequelize.define("liyuoa_lyuser", {
         primaryKey: true,
         field: 'id'
     },
+    realname: {
+        type: Sequelize.STRING,
+        field: 'realname'
+    },
     imusername: {
         type: Sequelize.STRING,
         field: 'imusername'
@@ -30,7 +34,7 @@ var User = sequelize.define("liyuoa_lyuser", {
 }, {freezeTableName: true, timestamps: false});
 
 
-var TalkGroup = sequelize.define("liyuim_talkuser", {
+var TalkGroupUser = sequelize.define("liyuim_talkuser", {
     id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -47,6 +51,42 @@ var TalkGroup = sequelize.define("liyuim_talkuser", {
     is_active: {
         type: Sequelize.BOOLEAN,
         field: 'is_active'
+    }
+}, {freezeTableName: true, timestamps: false});
+
+var TalkGroup = sequelize.define("liyuim_talkgroup", {
+    id: {
+        type: Sequelize.INTEGER,
+        primaryKey: true,
+        field: 'id'
+    },
+    owner_id: {
+        type: Sequelize.INTEGER,
+        field: 'owner_id'
+    },
+    name: {
+        type: Sequelize.STRING,
+        field: 'name'
+    },
+    max_member_count: {
+        type: Sequelize.INTEGER,
+        field: 'max_member_count'
+    },
+    group_type: {
+        type: Sequelize.INTEGER,
+        field: 'group_type'
+    },
+    is_add: {
+        type: Sequelize.BOOLEAN,
+        field: 'is_add'
+    },
+    flag: {
+        type: Sequelize.STRING,
+        field: 'flag'
+    },
+    icon_url: {
+        type: Sequelize.STRING,
+        field: 'icon_url'
     }
 }, {freezeTableName: true, timestamps: false});
 
@@ -80,13 +120,70 @@ module.exports.login = function (username, passowrd) {
  */
 module.exports.query_group_list = function (user_id) {
     var defered = Q.defer();
-    TalkGroup.findAll({
+    TalkGroupUser.findAll({
         where: {
             user_id: user_id,
             is_active: true
         }
     }).then(function (talkgroups) {
         defered.resolve(talkgroups.dataValues);
+    }, function (error) {
+        defered.reject(error);
+    });
+    return defered.promise;
+};
+
+
+module.exports.query_group_members = function (group_id) {
+    var defered = Q.defer();
+    TalkGroupUser.findAll({
+        where: {
+            talkgroup_id: group_id,
+            is_active: true
+        }
+    }).then(function (users) {
+        defered.resolve(users.dataValues);
+    }, function (error) {
+        defered.reject(error);
+    });
+    return defered.promise;
+};
+
+module.exports.get_group_info = function (group_id) {
+    var defered = Q.defer();
+    TalkGroup.findOne({
+        where: {
+            id: group_id
+        }
+    }).then(function (talkgroup) {
+        if (talkgroup) {
+            defered.resolve(talkgroup.dataValues);
+        }
+        else {
+            defered.reject({message: "不存在此分组"});
+        }
+
+    }, function (error) {
+        defered.reject(error);
+    });
+    return defered.promise;
+};
+
+module.exports.get_user_info = function (user_id) {
+    var defered = Q.defer();
+    //var self = this;
+    User.findOne({
+        where: {
+            id: user_id
+        }
+    }).then(function (user) {
+        if (user) {
+            defered.resolve(user.dataValues);
+        }
+        else {
+            defered.reject({message: "不存在此用户"})
+        }
+
     }, function (error) {
         defered.reject(error);
     });
