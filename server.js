@@ -459,14 +459,14 @@ var im_proto = grpc.load(PROTO_PATH).im;
 function commendIm(call, callback) {
 
     logging.log('im commend ...');
-    request = JSON.parse(call.request.commend);
-    handleIMCommend(request.route, request.parms).then(function (err, result) {
-        var msg = null;
-        if (err) {
-            msg = {success: false, message: err}
-        } else {
-            msg = {success: true, result: result}
-        }
+    var request = JSON.parse(call.request.commend);
+    var route = request.route;
+    var parms = request.parms;
+    handleIMCommend(route, request).then(function (result) {
+        var msg = {success: true, result: result}
+        callback(null, {result: JSON.stringify(msg)});
+    }, function (err) {
+        var msg = {success: false, message: err};
         callback(null, {result: JSON.stringify(msg)});
     });
 
