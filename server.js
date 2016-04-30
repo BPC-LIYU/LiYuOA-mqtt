@@ -437,14 +437,13 @@ function handleIMCommend(route, parms) {
         defered.resolve(parms);
         return defered.promise;
     }
-    else if (route === 'send_client_info') {
-        defered = Q.defer();
-        client.client_info = parms;
-        defered.resolve();
-        return defered.promise;
-    }
     else if (route === 'send_message') {
-        // handleMessage(client, parms);
+        return handleMessage(parms.from, parms);
+    }
+    else {
+        defered = Q.defer();
+        defered.reject("未知路由");
+        return defered.promise;
     }
 }
 
