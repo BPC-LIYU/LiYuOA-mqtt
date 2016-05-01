@@ -1,6 +1,7 @@
 var MongoClient = require('mongodb').MongoClient;
 var config = require('../../config');
 var logging = require('../log_service');
+var _ = require('underscore');
 var Q = require('q');
 var exports = module.exports;
 function mongoConnect() {
@@ -45,6 +46,21 @@ var find = exports.find = function (table, query) {
         return defered.promise;
     });
 };
+var eval = exports.eval = function (js, parameters) {
+    return mongoConnect().then(function (db) {
+        var defered = Q.defer();
+        db.eval(js, parameters, function (err, result) {
+            if (err) {
+                defered.reject(err);
+            }
+            else {
+                defered.resolve(result);
+            }
+            db.close();
+        });
+        return defered.promise;
+    });
+};
 var update = exports.update = function (table, query, set_obj) {
     query = query || {};
     set_obj = set_obj || {};
@@ -60,7 +76,7 @@ var update = exports.update = function (table, query, set_obj) {
     });
 };
 
-var updateOrInsert = exports.updateOrInsert = function (table, query, set_obj) {
+var updateOrInsert = exports.updateOrInsert = function (table, query, set_obj, default_obj) {
     query = query || {};
     set_obj = set_obj || {};
     return mongoConnect().then(function (db) {
@@ -70,6 +86,9 @@ var updateOrInsert = exports.updateOrInsert = function (table, query, set_obj) {
                 return update_result;
             }
             else {
+                if (default_obj) {
+                    _(set_obj).extend(default_obj);
+                }
                 return Q.nfcall(collection.insertOne.bind(collection), set_obj);
             }
         });
@@ -86,7 +105,7 @@ exports.addMessage = function (message) {
 };
 
 exports.addChatSession = function (chat_session) {
-    return updateOrInsert('chat_session', {session_id: chat_session.session_id}, chat_session);
+    return updateOrInsert('chat_session', {session_id: chat_session.session_id}, chat_session, {read_time: (new Date).valueOf()});
 };
 
 exports.queryChatSessionList = function (user_id) {

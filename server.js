@@ -189,7 +189,7 @@ function handleChatSession(message) {
 
 function handleMessage(client, parms) {
     var defered = Q.defer();
-    if (check_msg(parms, ["fname", "target_type", "target", "ctype", "content", "id_client", "push_content", "is_push", "is_unreadable"])) {
+    if (!check_msg(parms, ["fname", "target_type", "target", "ctype", "content", "id_client", "push_content", "is_push", "is_unreadable"])) {
         defered.reject();
     }
     var client_info = client.client_info || {};
