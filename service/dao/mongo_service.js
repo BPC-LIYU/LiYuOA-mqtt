@@ -111,7 +111,7 @@ exports.addChatSession = function (chat_session) {
 exports.queryChatSessionList = function (user_id) {
     var query = function (owner) {
         var result = [];
-        db.getCollection('chat_session').find({"owner": owner}).forEach(function (item) {
+        db.getCollection('chat_session').find({"owner": owner}).sort({"last_message_time": -1}).limit(50).forEach(function (item) {
             var read_time = item.read_time;
             var unread = db.getCollection('message').find({"time": {"$gt": read_time}}).count();
             item.unread = unread;
