@@ -109,5 +109,20 @@ exports.addChatSession = function (chat_session) {
 };
 
 exports.queryChatSessionList = function (user_id) {
-    return find('chat_session', {owner: user_id});
+    var query = function (owner) {
+        var result = [];
+        db.getCollection('chat_session').find({"owner": owner}).forEach(function (item) {
+            var read_time = item.read_time;
+            var unread = db.getCollection('message').find({"time": {"$gt": read_time}}).count();
+            item.unread = unread;
+            result.push(item);
+        });
+        return result;
+
+    };
+    return eval(query.toString(), [user_id]);
+};
+
+exports.setChatSessionReadTime = function (session_id, time) {
+    return update('chat_session', {session_id: session_id}, {read_time: time});
 };

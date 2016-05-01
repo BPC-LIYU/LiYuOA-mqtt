@@ -290,6 +290,8 @@ function handleRequest(client, route, parms) {
     }
     else if (route === 'get_chat_session') {
         return handleGetChatSession(client, parms);
+    } else if (route === 'set_chat_session_read_time') {
+        return mongo_service.setChatSessionReadTime(parms.session_id, parms.time);
     }
 
 }
