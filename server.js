@@ -292,6 +292,8 @@ function handleRequest(client, route, parms) {
         return handleGetChatSession(client, parms);
     } else if (route === 'set_chat_session_read_time') {
         return mongo_service.setChatSessionReadTime(parms.session_id, parms.time);
+    } else if (route === 'get_chat_history') {
+        return mongo_service.getChatHistory(parms.session_id, parms.last_time);
     }
 
 }
