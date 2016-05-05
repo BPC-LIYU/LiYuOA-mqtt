@@ -135,7 +135,7 @@ exports.getChatHistory = function (session_id, last_time) {
         if (last_time) {
             q_json['time'] = {"$lt": last_time};
         }
-        return db.getCollection('message').find(q_json).sort({"time": 1}).limit(20).toArray();
+        return db.getCollection('message').find(q_json).sort({"time": -1}).limit(20).toArray().reverse();
     };
     var parms = session_id.split('_');
     if (parms.length === 3) {
