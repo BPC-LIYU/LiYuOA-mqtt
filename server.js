@@ -347,7 +347,7 @@ server.authenticate = function (client, username, password, callback) {
         callback(null, false);
         return;
     }
-    dbservice.login(username, password).then(function (user) {
+    dbservice.login(username, password.toString()).then(function (user) {
         var event;
         client.user = user;
         if (server.clients[client.id]) {
@@ -433,6 +433,52 @@ server.on('ready', function () {
     main();
 });
 
+function handleOrgCommend(event, parms) {
+    var defered;
+    var event_type = parms.event_type;
+    var user_ids = parms.event_obj.user_ids;
+    delete parms.event_obj['user_ids'];
+    if(event_type == 'org_change' || event_type == 'org_group_change' || event_type == 'org_member_change'){
+        defered = Q.defer();
+        var payload = {
+            callid:server.generateUniqueId(),
+            type:'event',
+            compress:0,
+            obj:parms
+        };
+        _(user_ids).each(function (item) {
+            var packet = {
+                topic: "user/" + item,
+                payload: JSON.stringify(payload),
+                qos: 0,
+                retain: false
+            };
+            server.publish(packet);
+        });
+        defered.resolve({});
+        return defered.promise;
+    }else if (event_type == 'org_change'){
+        defered = Q.defer();
+        defered.resolve({});
+        return defered.promise;
+    }
+
+    return defered.promise;
+}
+
+
+function handleImGroupCommend(event, group_id, parms) {
+    var defered = Q.defer();
+
+    return defered.promise;
+}
+
+function handleImFriendCommend(event, group_id, parms) {
+    var defered = Q.defer();
+
+    return defered.promise;
+}
+
 
 function handleIMCommend(route, parms) {
     var defered;
@@ -440,8 +486,13 @@ function handleIMCommend(route, parms) {
         defered = Q.defer();
         defered.resolve(parms);
         return defered.promise;
-    }
-    else if (route === 'send_message') {
+    } else if (route === 'org') {
+        return handleOrgCommend(parms.event, parms);
+    } else if (route === 'imgroup') {
+        return handleImGroupCommend(parms.event, parms.group_id, parms);
+    } else if (route === 'imfriend') {
+        return handleImFriendCommend(parms.event, parms.group_id, parms);
+    } else if (route === 'send_message') {
         return handleMessage(parms.from, parms);
     }
     else {
@@ -466,8 +517,8 @@ function commendIm(call, callback) {
     var request = JSON.parse(call.request.commend);
     var route = request.route;
     var parms = request.parms;
-    handleIMCommend(route, request).then(function (result) {
-        var msg = {success: true, result: result}
+    handleIMCommend(route, parms).then(function (result) {
+        var msg = {success: true, result: result};
         callback(null, {result: JSON.stringify(msg)});
     }, function (err) {
         var msg = {success: false, message: err};
