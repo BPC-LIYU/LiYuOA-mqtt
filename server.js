@@ -439,29 +439,26 @@ function handleOrgCommend(event, parms) {
     var user_ids = parms.event_obj.user_ids;
     delete parms.event_obj['user_ids'];
     if(event_type == 'org_change' || event_type == 'org_group_change' || event_type == 'org_member_change'){
-        defered = Q.defer();
-        var payload = {
-            callid:server.generateUniqueId(),
-            type:'event',
-            compress:0,
-            obj:parms
-        };
-        _(user_ids).each(function (item) {
-            var packet = {
-                topic: "user/" + item,
-                payload: JSON.stringify(payload),
-                qos: 0,
-                retain: false
-            };
-            server.publish(packet);
-        });
-        defered.resolve({});
-        return defered.promise;
-    }else if (event_type == 'org_change'){
-        defered = Q.defer();
-        defered.resolve({});
-        return defered.promise;
+
     }
+    defered = Q.defer();
+    var payload = {
+        callid:server.generateUniqueId(),
+        type:'event',
+        compress:0,
+        obj:parms
+    };
+    _(user_ids).each(function (item) {
+        var packet = {
+            topic: "user/" + item,
+            payload: JSON.stringify(payload),
+            qos: 0,
+            retain: false
+        };
+        server.publish(packet);
+    });
+    defered.resolve({});
+    return defered.promise;
 
     return defered.promise;
 }
