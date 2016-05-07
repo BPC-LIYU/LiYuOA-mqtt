@@ -76,6 +76,22 @@ var update = exports.update = function (table, query, set_obj) {
     });
 };
 
+var deleteMany = exports.deleteMany = function (table, query) {
+    if (!query) {
+        return;
+    }
+    return mongoConnect().then(function (db) {
+        var collection = db.collection(table);
+        var result = Q.nfcall(collection.deleteMany.bind(collection), query);
+        result.then(function () {
+            db.close();
+        }, function () {
+            db.close();
+        });
+        return result;
+    });
+};
+
 var updateOrInsert = exports.updateOrInsert = function (table, query, set_obj, default_obj) {
     query = query || {};
     set_obj = set_obj || {};
@@ -157,3 +173,10 @@ exports.getChatHistory = function (session_id, last_time) {
     }
 
 };
+
+exports.deleteChatSession = function (session_id) {
+
+    return deleteMany('chat_session', {session_id: session_id});
+};
+
+

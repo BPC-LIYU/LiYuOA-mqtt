@@ -272,6 +272,37 @@ function handleGetChatSession(client, parms) {
     }
 
 }
+function handleDeleteChatSession(client, parms) {
+    var payload, packet;
+    var session_id;
+    var is_group_message = (parms.target_type === 1);
+    if (is_group_message) {
+        session_id = client.user.id + "_g_" + parms.target;
+    }
+    else {
+        session_id = client.user.id + "_p_" + parms.target;
+    }
+    var result = mongo_service.deleteChatSession(session_id);
+    result.then(function () {
+        payload = {
+            type: 'event',
+            compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
+            obj: {
+                message_id: server.generateUniqueId(), //服务器端id，防止重复
+                event_type: 'delete_chat_session',
+                event_obj: {session_id: session_id} //事件内容
+            }
+        };
+        packet = {
+            topic: "user/" + client.user.id,
+            payload: JSON.stringify(payload),
+            qos: 1,
+            retain: false
+        };
+        server.publish(packet);
+    });
+    return result;
+}
 function handleRequest(client, route, parms) {
     var defered;
     if (route === 'test') {
@@ -294,6 +325,8 @@ function handleRequest(client, route, parms) {
         return mongo_service.setChatSessionReadTime(parms.session_id, parms.time);
     } else if (route === 'get_chat_history') {
         return mongo_service.getChatHistory(parms.session_id, parms.last_time);
+    } else if (route === 'delete_chat_session') {
+        return handleDeleteChatSession(client, parms);
     }
 
 }
@@ -438,15 +471,15 @@ function handleOrgCommend(event, parms) {
     var event_type = parms.event_type;
     var user_ids = parms.event_obj.user_ids;
     delete parms.event_obj['user_ids'];
-    if(event_type == 'org_change' || event_type == 'org_group_change' || event_type == 'org_member_change'){
+    if (event_type == 'org_change' || event_type == 'org_group_change' || event_type == 'org_member_change') {
 
     }
     defered = Q.defer();
     var payload = {
-        callid:server.generateUniqueId(),
-        type:'event',
-        compress:0,
-        obj:parms
+        callid: server.generateUniqueId(),
+        type: 'event',
+        compress: 0,
+        obj: parms
     };
     _(user_ids).each(function (item) {
         var packet = {
