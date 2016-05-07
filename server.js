@@ -155,7 +155,7 @@ function handleChatSession(message) {
                 obj: chat_session //消息json信息
             };
             packet = {
-                topic: "user/" + message.target,
+                topic: "user/" + message.fuser,
                 payload: JSON.stringify(payload),
                 qos: 1,
                 retain: false
