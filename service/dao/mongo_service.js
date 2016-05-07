@@ -142,7 +142,7 @@ exports.queryChatSessionList = function (user_id) {
 exports.setChatSessionReadTime = function (session_id, time) {
     return update('chat_session', {session_id: session_id}, {read_time: time});
 };
-exports.getChatHistory = function (session_id, last_time) {
+exports.getChatHistory = function (user_id, target, target_type, last_time) {
     var query = function (fuser, target, target_type, last_time) {
         var q_json = {
             "target_type": target_type,
@@ -153,24 +153,8 @@ exports.getChatHistory = function (session_id, last_time) {
         }
         return db.getCollection('message').find(q_json).sort({"time": -1}).limit(20).toArray().reverse();
     };
-    var parms = session_id.split('_');
-    if (parms.length === 3) {
-        var fuser = parseInt(parms[0]);
-        var target = parseInt(parms[2]);
-        var target_type;
-        if (parms[1] == 'g') {
-            target_type = 1;
-        }
-        else {
-            target_type = 0;
-        }
-        return eval(query.toString(), [fuser, target, target_type, last_time]);
-    }
-    else {
-        var defered = Q.defer();
-        defered.reject({message: "session_id格式错误"});
-        return defered.promise;
-    }
+    return eval(query.toString(), [user_id, target, target_type, last_time]);
+
 
 };
 

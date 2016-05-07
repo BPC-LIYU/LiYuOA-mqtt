@@ -324,7 +324,7 @@ function handleRequest(client, route, parms) {
     } else if (route === 'set_chat_session_read_time') {
         return mongo_service.setChatSessionReadTime(parms.session_id, parms.time);
     } else if (route === 'get_chat_history') {
-        return mongo_service.getChatHistory(parms.session_id, parms.last_time);
+        return mongo_service.getChatHistory(client.user.id, parms.target, parms.target_type, parms.last_time);
     } else if (route === 'delete_chat_session') {
         return handleDeleteChatSession(client, parms);
     }
