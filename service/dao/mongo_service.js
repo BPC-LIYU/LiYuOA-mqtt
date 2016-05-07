@@ -128,8 +128,25 @@ exports.queryChatSessionList = function (user_id) {
     var query = function (owner) {
         var result = [];
         db.getCollection('chat_session').find({"owner": owner}).sort({"last_message_time": -1}).limit(50).forEach(function (item) {
-            var read_time = item.read_time;
-            var unread = db.getCollection('message').find({"time": {"$gt": read_time}}).count();
+            var unread, read_time, is_group_message;
+            read_time = item.read_time;
+            is_group_message = (item.target_type === 1);
+            if (is_group_message) {
+                unread = db.getCollection('message').find({
+                    "time": {"$gt": read_time},
+                    "target": item.target,
+                    "target_type": item.target_type,
+                    "fuser": {"$ne": item.fuser}
+                }).count();
+            }
+            else {
+                unread = db.getCollection('message').find({
+                    "time": {"$gt": read_time},
+                    "target": item.owner,
+                    "target_type": item.target_type
+                }).count();
+            }
+
             item.unread = unread;
             result.push(item);
         });
