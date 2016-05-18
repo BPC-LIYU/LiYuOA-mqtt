@@ -51,7 +51,8 @@ var session_update = {
     name: '', //显示昵称
     last_message: {ctype: "", content: ''},//显示最后一条内容
     last_message_time: '', //最后一条时间
-    read_time: 112,  //已读时间戳
+    read_time: 112,  //拥有者读区时间
+    target_read_time: 112,  //对方读区时间
     unread: 12 //未读消息数
 };
 
