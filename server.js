@@ -1,3 +1,5 @@
+/*jslint node: true */
+"use strict";
 /**
  * Created by fanjunwei on 16/4/14.
  */
@@ -13,7 +15,7 @@ var Q = require('q');
 
 
 var clients_callback = {};
-config.mqtt['backend'] = {
+config.mqtt.backend = {
     type: 'zmq',
     json: false,
     zmq: require("zmq"),
@@ -46,7 +48,7 @@ function publishForClient(client, topic, payload) {
         "topic": topic,
         "payload": payload,
         "qos": 0,
-        "messageId": (new Date).valueOf()
+        "messageId": (new Date()).valueOf()
     };
     client.connection.publish(message);
 }
@@ -91,14 +93,14 @@ function handleChatSession(message) {
                 defered.resolve(info.name);
             }, function () {
                 defered.resolve();
-            })
+            });
         }
         else {
             dbservice.get_user_info(message.target).then(function (info) {
                 defered.resolve(info.realname);
             }, function () {
                 defered.resolve();
-            })
+            });
         }
         return defered.promise;
     }
@@ -209,7 +211,7 @@ function handleMessage(client, parms) {
                 message.readuserlist.push({user_id: user.user_id, is_read: false, time: null});
             });
             save_message(message);
-        })
+        });
     }
     else {
         save_message(message);
@@ -255,7 +257,7 @@ function handleMessage(client, parms) {
             defered.resolve();
         }, function (error) {
             defered.reject(error);
-        })
+        });
     }
 
     return defered.promise;
@@ -263,7 +265,7 @@ function handleMessage(client, parms) {
 
 function handleGetChatSession(client, parms) {
     if (client.user) {
-        return mongo_service.queryChatSessionList(client.user.id)
+        return mongo_service.queryChatSessionList(client.user.id);
     }
     else {
         var defered = Q.defer();
@@ -366,7 +368,7 @@ server.on('published', function (packet, client, callback) {
 
             }, function (error) {
                 logging.error("request error", route, parms, error);
-            })
+            });
         }
     }
 
@@ -470,10 +472,10 @@ function handleOrgCommend(event, parms) {
     var defered;
     var event_type = parms.event_type;
     var user_ids = parms.event_obj.user_ids;
-    delete parms.event_obj['user_ids'];
-    if (event_type == 'org_change' || event_type == 'org_group_change' || event_type == 'org_member_change') {
-
-    }
+    // delete parms.event_obj.user_ids;
+    // if (event_type == 'org_change' || event_type == 'org_group_change' || event_type == 'org_member_change') {
+    //
+    // }
     defered = Q.defer();
     var payload = {
         callid: server.generateUniqueId(),
@@ -491,8 +493,6 @@ function handleOrgCommend(event, parms) {
         server.publish(packet);
     });
     defered.resolve({});
-    return defered.promise;
-
     return defered.promise;
 }
 

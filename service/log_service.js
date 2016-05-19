@@ -1,6 +1,8 @@
 /**
  * Created by fanjunwei on 16/4/28.
  */
+/*jslint node: true */
+"use strict";
 var log4js = require('log4js');
 var config = require('../config');
 log4js.configure(config.logging);

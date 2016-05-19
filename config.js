@@ -1,6 +1,8 @@
 /**
  * Created by fanjunwei on 16/4/27.
  */
+/*jslint node: true */
+"use strict";
 var fs = require("fs");
 var _ = require('underscore');
 

@@ -11,6 +11,10 @@
   "dependencies": {
     "async": "^1.5.2",
     "grpc": "0.13.0",
+    "gulp": "^3.9.1",
+    "gulp-jshint": "^2.0.1",
+    "gulp-nodemon": "^2.0.7",
+    "jshint": "^2.9.2",
     "lodash": "^4.6.1",
     "log4js": "^0.6.35",
     "minimist": "^1.2.0",

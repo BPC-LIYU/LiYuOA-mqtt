@@ -1,6 +1,8 @@
 /**
  * Created by fanjunwei on 16/4/14.
  */
+/*jslint node: true */
+"use strict";
 var mqtt = require('mqtt');
 
 var client = mqtt.connect("mqtt://localhost:5112",{username:"x","password":"x"});

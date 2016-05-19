@@ -1,7 +1,8 @@
 /**
  * Created by wangjian on 16/4/26.
  */
-
+/*jslint node: true */
+"use strict";
 //主动
 //todo:/登录/获取会话列表/获取总未读数/清除未读数/删除会话/查询历史记录/发送消息/发送已读回执/退出
 //todo:/获取免打扰（人或群）/设置好友信息（昵称、黑名单、免扰）/获取通知状态（是否通知、声音、震动）/设置通知状态（是否通知、声音、震动）/获取好友列表/获取群列表/获取群成员列表/获取群信息/
@@ -91,16 +92,16 @@ var file = {
     text: '[图片]'
 };
 
-var location = {
-    address: "地址",
-    name: "名称",
-    //纬度
-    latitude: 39.9,
-    //经度
-    longitude: 116.3,
-    text: '[位置]'
-
-};
+// var location = {
+//     address: "地址",
+//     name: "名称",
+//     //纬度
+//     latitude: 39.9,
+//     //经度
+//     longitude: 116.3,
+//     text: '[位置]'
+//
+// };
 
 var vcard = {
     uid: 1,
@@ -112,12 +113,12 @@ var href = {
 };
 var oa = {};
 
-var event = {
-    callid: 1, //客户端用来区分回调函数的id，客户端自0~1000循环
-    type: 'chat|event|request',
-    compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
-    obj: chat_message //消息json信息
-};
+// var event = {
+//     callid: 1, //客户端用来区分回调函数的id，客户端自0~1000循环
+//     type: 'chat|event|request',
+//     compress: 0, //类似pomelo 对键值的压缩需要客户端和服务器端实现相同的压缩解压缩算法 版本
+//     obj: chat_message //消息json信息
+// };
 
 
 //客户端发送单聊 topic send/{id}
@@ -134,4 +135,4 @@ var send_user_message = {
     is_push: true, //是否推送
     is_unreadable: true, //是否计入未读数
     readuserlist: [1, 2]
-}
+};

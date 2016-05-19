@@ -2,7 +2,7 @@
   "database": {
     "name": "ly",
     "username": "root",
-    "password": "root",
+    "password": "",
     "options": {
       "host": "localhost",
       "dialect": "mysql",

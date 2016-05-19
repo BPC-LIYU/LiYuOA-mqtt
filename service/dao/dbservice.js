@@ -1,7 +1,8 @@
 /**
  * Created by wangjian on 16/4/26.
  */
-
+/*jslint node: true */
+"use strict";
 var Sequelize = require('sequelize');
 var config = require('../../config');
 var Q = require('q');
@@ -103,7 +104,7 @@ module.exports.login = function (username, passowrd) {
             defered.resolve(user.dataValues);
         }
         else {
-            defered.reject({message: "im login error:用户名或密码错误", code: 501})
+            defered.reject({message: "im login error:用户名或密码错误", code: 501});
         }
 
     }, function (error) {
@@ -181,7 +182,7 @@ module.exports.get_user_info = function (user_id) {
             defered.resolve(user.dataValues);
         }
         else {
-            defered.reject({message: "不存在此用户"})
+            defered.reject({message: "不存在此用户"});
         }
 
     }, function (error) {

@@ -1,3 +1,5 @@
+/*jslint node: true */
+"use strict";
 var MongoClient = require('mongodb').MongoClient;
 var config = require('../../config');
 var logging = require('../log_service');
@@ -46,7 +48,7 @@ var find = exports.find = function (table, query) {
         return defered.promise;
     });
 };
-var eval = exports.eval = function (js, parameters) {
+var jsEval = exports.jsEval = function (js, parameters) {
     return mongoConnect().then(function (db) {
         var defered = Q.defer();
         db.eval(js, parameters, function (err, result) {
@@ -121,10 +123,11 @@ exports.addMessage = function (message) {
 };
 
 exports.addChatSession = function (chat_session) {
-    return updateOrInsert('chat_session', {session_id: chat_session.session_id}, chat_session, {read_time: (new Date).valueOf()});
+    return updateOrInsert('chat_session', {session_id: chat_session.session_id}, chat_session, {read_time: (new Date()).valueOf()});
 };
 
 exports.queryChatSessionList = function (user_id) {
+    var db;
     var query = function (owner) {
         var result = [];
         db.getCollection('chat_session').find({"owner": owner}).sort({"last_message_time": -1}).limit(50).forEach(function (item) {
@@ -153,24 +156,25 @@ exports.queryChatSessionList = function (user_id) {
         return result;
 
     };
-    return eval(query.toString(), [user_id]);
+    return jsEval(query.toString(), [user_id]);
 };
 
 exports.setChatSessionReadTime = function (session_id, time) {
     return update('chat_session', {session_id: session_id}, {read_time: time});
 };
 exports.getChatHistory = function (user_id, target, target_type, last_time) {
+    var db;
     var query = function (fuser, target, target_type, last_time) {
         var q_json = {
             "target_type": target_type,
             "$or": [{"fuser": fuser, "target": target}, {"fuser": target, "target": fuser}]
         };
         if (last_time) {
-            q_json['time'] = {"$lt": last_time};
+            q_json.time = {"$lt": last_time};
         }
         return db.getCollection('message').find(q_json).sort({"time": -1}).limit(20).toArray().reverse();
     };
-    return eval(query.toString(), [user_id, target, target_type, last_time]);
+    return jsEval(query.toString(), [user_id, target, target_type, last_time]);
 
 
 };

@@ -1,3 +1,5 @@
+/*jslint node: true */
+"use strict";
 /**
  * Created by fanjunwei on 16/4/14.
  */
@@ -8,7 +10,7 @@ var client = mqtt.connect("mqtt://localhost:5112", {clientId: '123', username:'1
 client.subscribe('test', {qos: 1});
 
 client.on('message', function (topic, message) {
-    if(message.toString() == "beiti"){
+    if(message.toString() === "beiti"){
         client.end();
     }
     console.log(topic, message.toString());

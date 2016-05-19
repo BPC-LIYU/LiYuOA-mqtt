@@ -30,7 +30,8 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
-
+/*jslint node: true */
+"use strict";
 var PROTO_PATH = __dirname + 'helloworld.proto';
 
 var grpc = require('grpc');
